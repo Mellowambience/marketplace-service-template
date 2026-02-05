@@ -1,16 +1,48 @@
 # Marketplace Service Template
 
-Build a paid API on [Proxies.sx](https://agents.proxies.sx) mobile proxy infrastructure. Gate with x402 USDC micropayments. Keep the margin.
+**Turn AI agent traffic into passive USDC income.**
 
-## Economics
+Fork this repo → edit one file → deploy → start earning.
 
-| | Your Cost | You Charge | Your Margin |
-|-|-----------|------------|-------------|
-| Per request (0.01 GB proxy) | $0.04 / 100 req | $0.005 / req | **$0.46 / 100 req** |
-| At 1,000 req/day | ~$0.40/day | ~$5/day | **~$4.60/day** |
-| At 10,000 req/day | ~$4/day | ~$50/day | **~$46/day** |
+You provide the idea. We provide 147 mobile devices across 6 countries, x402 payment rails, and the marketplace to find customers.
 
-Proxy cost: $4/GB shared, $8/GB private ([live pricing](https://api.proxies.sx/v1/x402/pricing)).
+## 💰 The Economics
+
+You're arbitraging infrastructure. Buy proxy bandwidth wholesale, sell API calls retail.
+
+| Scale | Your Cost | You Earn | **Your Profit** |
+|-------|-----------|----------|-----------------|
+| 100 requests | $0.04 | $0.50 | **$0.46** |
+| 1,000 req/day | $0.40/day | $5/day | **$4.60/day** (~$140/mo) |
+| 10,000 req/day | $4/day | $50/day | **$46/day** (~$1,400/mo) |
+| 100,000 req/day | $40/day | $500/day | **$460/day** (~$14,000/mo) |
+
+**Your margin: 90%+** — proxy costs $4/GB, you charge whatever the market bears.
+
+### Why This Works
+
+1. **AI agents pay automatically** — x402 protocol, no invoicing, no chasing payments
+2. **Real mobile IPs** — bypass blocks that kill datacenter scrapers
+3. **Zero customer support** — API works or returns error, agents handle retries
+4. **Passive income** — deploy once, earn while you sleep
+
+## 🛠️ What to Build
+
+Services that need real browser + real IP. AI agents will pay for these:
+
+| Service Idea | Complexity | Price Range | Why Mobile IP Matters |
+|--------------|------------|-------------|----------------------|
+| **SERP Scraper** | Easy | $0.005-0.02/query | Google blocks datacenter IPs |
+| **Social Media Scraper** | Easy | $0.01-0.05/profile | Twitter/LinkedIn/Instagram detection |
+| **Price Monitor** | Easy | $0.005-0.01/check | E-commerce anti-bot systems |
+| **Ad Verification** | Medium | $0.02-0.10/check | Must appear as real mobile user |
+| **Review Scraper** | Easy | $0.01-0.03/page | Yelp/TripAdvisor/Amazon blocks |
+| **Lead Generator** | Medium | $0.05-0.20/lead | Directory scraping + enrichment |
+| **Screenshot Service** | Medium | $0.01-0.05/shot | Needs real browser fingerprint |
+| **Form Submitter** | Medium | $0.10-0.50/submit | Account creation, signups |
+| **Captcha Page Solver** | Hard | $0.05-0.20/solve | Cloudflare/Akamai challenges |
+
+**Pro tip:** Start simple. A focused SERP scraper making $5/day beats a complex service making $0/day.
 
 ## Quick Start
 
@@ -131,13 +163,24 @@ bun install --production && bun run start
 # Just connect the repo — Dockerfile detected automatically
 ```
 
-## List on Marketplace
+## 🚀 List on Marketplace = Get Discovered
 
-Once live, submit to [agents.proxies.sx/marketplace](https://agents.proxies.sx/marketplace/):
+Your service needs customers. The [Proxies.sx Marketplace](https://agents.proxies.sx/marketplace/) is where AI agents discover services to pay for.
 
-1. Fill in [submit.md](https://agents.proxies.sx/marketplace/submit.md)
-2. Send to [@proxyforai](https://t.me/proxyforai) or [@sxproxies](https://x.com/sxproxies)
-3. Maya verifies and lists your service
+**How to get listed:**
+
+1. Deploy your service (any public URL)
+2. DM [@proxyforai](https://t.me/proxyforai) or [@sxproxies](https://x.com/sxproxies) with:
+   - Service URL
+   - What it does
+   - Price per request
+   - Your wallet address
+3. We verify it works → list it → AI agents start paying you
+
+**What you get:**
+- Featured in marketplace skill file (AI agents read this)
+- Included in MCP server tool discovery
+- Promoted to our agent network
 
 ## Links
 
@@ -155,3 +198,17 @@ Once live, submit to [agents.proxies.sx/marketplace](https://agents.proxies.sx/m
 ## License
 
 MIT — fork it, ship it, profit.
+
+---
+
+**Ready to start earning?**
+
+```bash
+git clone https://github.com/bolivian-peru/marketplace-service-template
+cd marketplace-service-template
+cp .env.example .env
+# Add your wallet + proxy credentials
+bun install && bun run dev
+```
+
+Questions? [@proxyforai](https://t.me/proxyforai) · [@sxproxies](https://x.com/sxproxies)
