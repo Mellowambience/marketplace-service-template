@@ -44,16 +44,69 @@
     ]
   },
   "category": "proxy",
-  "tags": ["mobile", "4g", "5g", "rotating", "residential", "anti-detect", "scraping", "automation", "socks5", "pool-gateway"],
+  "tags": [
+    "mobile",
+    "4g",
+    "5g",
+    "rotating",
+    "residential",
+    "anti-detect",
+    "scraping",
+    "automation",
+    "socks5",
+    "pool-gateway"
+  ],
   "inventory": {
     "totalDevices": 155,
     "countries": {
-      "US": { "devices": 42, "carriers": ["AT&T", "T-Mobile", "Verizon"] },
-      "DE": { "devices": 26, "carriers": ["Telekom", "Vodafone", "O2"] },
-      "ES": { "devices": 24, "carriers": ["Movistar", "Vodafone", "Orange"] },
-      "GB": { "devices": 22, "carriers": ["EE", "Vodafone", "Three"] },
-      "PL": { "devices": 21, "carriers": ["Orange", "Play", "Plus"] },
-      "FR": { "devices": 18, "carriers": ["Orange", "SFR", "Bouygues"] }
+      "US": {
+        "devices": 42,
+        "carriers": [
+          "AT&T",
+          "T-Mobile",
+          "Verizon"
+        ]
+      },
+      "DE": {
+        "devices": 26,
+        "carriers": [
+          "Telekom",
+          "Vodafone",
+          "O2"
+        ]
+      },
+      "ES": {
+        "devices": 24,
+        "carriers": [
+          "Movistar",
+          "Vodafone",
+          "Orange"
+        ]
+      },
+      "GB": {
+        "devices": 22,
+        "carriers": [
+          "EE",
+          "Vodafone",
+          "Three"
+        ]
+      },
+      "PL": {
+        "devices": 21,
+        "carriers": [
+          "Orange",
+          "Play",
+          "Plus"
+        ]
+      },
+      "FR": {
+        "devices": 18,
+        "carriers": [
+          "Orange",
+          "SFR",
+          "Bouygues"
+        ]
+      }
     }
   },
   "features": [
@@ -95,5 +148,7 @@
     "install": "npx -y @proxies-sx/mcp-server",
     "tools": 59,
     "github": "https://github.com/bolivian-peru/proxies-sx-mcp-server"
-  }
+  },
+  "lastVerified": "2026-02-15T00:00:00Z",
+  "healthEndpoint": "https://api.proxies.sx/v1/x402/health"
 }
