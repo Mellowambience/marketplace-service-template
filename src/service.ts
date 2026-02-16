@@ -9,7 +9,7 @@ import { Hono } from 'hono';
 import { proxyFetch, getProxy } from './proxy';
 import { extractPayment, verifyPayment, build402Response } from './payment';
 import { scrapeIndeed, scrapeLinkedIn, type JobListing } from './scrapers/job-scraper';
-import { fetchReviews, fetchBusinessDetails, fetchReviewSummary, searchBusinesses } from './scrapers/reviews-scraper';
+import { fetchReviews, fetchBusinessDetails, fetchReviewSummary, searchBusinesses } from './scrapers/reviews';
 
 export const serviceRouter = new Hono();
 
@@ -125,6 +125,28 @@ const REVIEWS_PRICE_USDC = 0.02;   // $0.02 per reviews fetch
 const BUSINESS_PRICE_USDC = 0.01;  // $0.01 per business lookup
 const SUMMARY_PRICE_USDC = 0.005;  // $0.005 per summary
 
+// ─── PROXY RATE LIMITING (prevent proxy quota abuse) ──
+const proxyUsage = new Map<string, { count: number; resetAt: number }>();
+const PROXY_RATE_LIMIT = 20; // max proxy-routed requests per minute per IP
+
+function checkProxyRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const entry = proxyUsage.get(ip);
+  if (!entry || now > entry.resetAt) {
+    proxyUsage.set(ip, { count: 1, resetAt: now + 60_000 });
+    return true;
+  }
+  entry.count++;
+  return entry.count <= PROXY_RATE_LIMIT;
+}
+
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, entry] of proxyUsage) {
+    if (now > entry.resetAt) proxyUsage.delete(ip);
+  }
+}, 300_000);
+
 // ─── GET /api/reviews/search ────────────────────────
 
 serviceRouter.get('/reviews/search', async (c) => {
@@ -141,6 +163,12 @@ serviceRouter.get('/reviews/search', async (c) => {
 
   const verification = await verifyPayment(payment, walletAddress, BUSINESS_PRICE_USDC);
   if (!verification.valid) return c.json({ error: 'Payment verification failed', reason: verification.error }, 402);
+
+  const clientIp = c.req.header('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+  if (!checkProxyRateLimit(clientIp)) {
+    c.header('Retry-After', '60');
+    return c.json({ error: 'Proxy rate limit exceeded. Max 20 requests/min to protect proxy quota.', retryAfter: 60 }, 429);
+  }
 
   const query = c.req.query('query');
   const location = c.req.query('location');
@@ -183,6 +211,12 @@ serviceRouter.get('/reviews/summary/:place_id', async (c) => {
   const verification = await verifyPayment(payment, walletAddress, SUMMARY_PRICE_USDC);
   if (!verification.valid) return c.json({ error: 'Payment verification failed', reason: verification.error }, 402);
 
+  const summaryIp = c.req.header('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+  if (!checkProxyRateLimit(summaryIp)) {
+    c.header('Retry-After', '60');
+    return c.json({ error: 'Proxy rate limit exceeded. Max 20 requests/min to protect proxy quota.', retryAfter: 60 }, 429);
+  }
+
   const placeId = c.req.param('place_id');
   if (!placeId) return c.json({ error: 'Missing place_id in URL path' }, 400);
 
@@ -223,6 +257,12 @@ serviceRouter.get('/reviews/:place_id', async (c) => {
 
   const verification = await verifyPayment(payment, walletAddress, REVIEWS_PRICE_USDC);
   if (!verification.valid) return c.json({ error: 'Payment verification failed', reason: verification.error }, 402);
+
+  const reviewsIp = c.req.header('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+  if (!checkProxyRateLimit(reviewsIp)) {
+    c.header('Retry-After', '60');
+    return c.json({ error: 'Proxy rate limit exceeded. Max 20 requests/min to protect proxy quota.', retryAfter: 60 }, 429);
+  }
 
   const placeId = c.req.param('place_id');
   if (!placeId) return c.json({ error: 'Missing place_id in URL path' }, 400);
@@ -270,6 +310,12 @@ serviceRouter.get('/business/:place_id', async (c) => {
 
   const verification = await verifyPayment(payment, walletAddress, BUSINESS_PRICE_USDC);
   if (!verification.valid) return c.json({ error: 'Payment verification failed', reason: verification.error }, 402);
+
+  const bizIp = c.req.header('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+  if (!checkProxyRateLimit(bizIp)) {
+    c.header('Retry-After', '60');
+    return c.json({ error: 'Proxy rate limit exceeded. Max 20 requests/min to protect proxy quota.', retryAfter: 60 }, 429);
+  }
 
   const placeId = c.req.param('place_id');
   if (!placeId) return c.json({ error: 'Missing place_id in URL path' }, 400);
