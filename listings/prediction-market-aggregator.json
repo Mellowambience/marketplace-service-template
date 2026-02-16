@@ -4,7 +4,7 @@
   "description": "Aggregated prediction market data from Polymarket, Kalshi, and more. Real-time odds, volume, and market signals. $0.05/query via x402.",
   "longDescription": "Aggregate prediction market data from Polymarket, Kalshi, and other major platforms. Get real-time odds, trading volume, market signals, and historical trends. Query by topic, category, or specific market. Returns structured JSON with current probabilities, volume data, price history, and cross-platform comparisons. Ideal for trading agents, research, forecasting, and decision-making automation.",
   "endpoint": "https://marketplace-service-template.onrender.com",
-  "docsUrl": "https://marketplace-service-template.onrender.com/docs",
+  "docsUrl": "https://agents.proxies.sx/marketplace/skill.md",
   "pricing": {
     "model": "per-request",
     "amount": "0.05",
