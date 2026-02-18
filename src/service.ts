@@ -491,3 +491,213 @@ serviceRouter.get('/instagram/discover', async (c) => {
     payment: { txHash: payment.txHash, network: payment.network, amount: verification.amount, settled: true },
   });
 });
+
+
+// ═══════════════════════════════════════════════════════
+// Reddit Intelligence API (Bounty #68) — $50
+// ═══════════════════════════════════════════════════════
+
+import { searchReddit, getTrending, getSubredditTop, getThread } from './scrapers/reddit';
+
+const REDDIT_PRICES = {
+  search: 0.005,
+  trending: 0.005,
+  subredditTop: 0.005,
+  thread: 0.01,
+};
+
+// ─── GET /api/reddit/search ─────────────────────────
+serviceRouter.get('/reddit/search', async (c) => {
+  const payment = extractPayment(c);
+  if (!payment) {
+    return c.json(
+      build402Response('/api/reddit/search', 'Search Reddit posts by keyword', REDDIT_PRICES.search, WALLET_ADDRESS, {
+        input: {
+          query: 'string (required) — Search keyword or phrase',
+          subreddit: 'string (optional, default: all) — Restrict to subreddit',
+          sort: 'string (optional: relevance|hot|new|top|comments, default: relevance)',
+          time: 'string (optional: hour|day|week|month|year|all, default: week)',
+        },
+        output: { results: 'RedditPost[] — title, subreddit, author, score, num_comments, url, body_preview', meta: 'proxy info' },
+      }),
+      402,
+    );
+  }
+
+  const verified = await verifyPayment(payment.txHash, payment.network, REDDIT_PRICES.search, WALLET_ADDRESS);
+  if (!verified.valid) {
+    return c.json({ error: 'Payment verification failed', details: verified.error }, 402);
+  }
+
+  const clientIp = getClientIp(c);
+  if (!checkProxyRateLimit(clientIp)) {
+    return c.json({ error: 'Rate limit exceeded. Try again in 60 seconds.' }, 429);
+  }
+
+  try {
+    const query = c.req.query('query');
+    if (!query) return c.json({ error: 'query parameter is required' }, 400);
+
+    const subreddit = c.req.query('subreddit') || 'all';
+    const sort = (c.req.query('sort') as any) || 'relevance';
+    const time = (c.req.query('time') as any) || 'week';
+
+    const proxyIp = await getProxyExitIp();
+    const data = await searchReddit(query, subreddit, sort, time);
+
+    return c.json({
+      ...data,
+      meta: {
+        query,
+        subreddit,
+        sort,
+        time,
+        proxy: { ip: proxyIp || 'mobile', country: 'US', carrier: 'T-Mobile' },
+      },
+      payment: { txHash: payment.txHash, amount: String(REDDIT_PRICES.search), verified: true },
+    });
+  } catch (err: any) {
+    return c.json({ error: 'Reddit search failed', details: err.message }, 500);
+  }
+});
+
+// ─── GET /api/reddit/trending ───────────────────────
+serviceRouter.get('/reddit/trending', async (c) => {
+  const payment = extractPayment(c);
+  if (!payment) {
+    return c.json(
+      build402Response('/api/reddit/trending', 'Trending topics on Reddit', REDDIT_PRICES.trending, WALLET_ADDRESS, {
+        input: { country: 'string (optional, default: US) — Country filter' },
+        output: { topics: 'TrendingTopic[] — title, subreddit, rank, score, num_comments' },
+      }),
+      402,
+    );
+  }
+
+  const verified = await verifyPayment(payment.txHash, payment.network, REDDIT_PRICES.trending, WALLET_ADDRESS);
+  if (!verified.valid) {
+    return c.json({ error: 'Payment verification failed', details: verified.error }, 402);
+  }
+
+  const clientIp = getClientIp(c);
+  if (!checkProxyRateLimit(clientIp)) {
+    return c.json({ error: 'Rate limit exceeded. Try again in 60 seconds.' }, 429);
+  }
+
+  try {
+    const country = c.req.query('country') || 'US';
+    const proxyIp = await getProxyExitIp();
+    const topics = await getTrending(country);
+
+    return c.json({
+      topics,
+      meta: {
+        country,
+        total_results: topics.length,
+        proxy: { ip: proxyIp || 'mobile', country: 'US', carrier: 'T-Mobile' },
+      },
+      payment: { txHash: payment.txHash, amount: String(REDDIT_PRICES.trending), verified: true },
+    });
+  } catch (err: any) {
+    return c.json({ error: 'Reddit trending failed', details: err.message }, 500);
+  }
+});
+
+// ─── GET /api/reddit/subreddit/:name/top ────────────
+serviceRouter.get('/reddit/subreddit/:name/top', async (c) => {
+  const payment = extractPayment(c);
+  if (!payment) {
+    return c.json(
+      build402Response('/api/reddit/subreddit/:name/top', 'Top posts from a subreddit', REDDIT_PRICES.subredditTop, WALLET_ADDRESS, {
+        input: {
+          name: 'string (required) — Subreddit name without r/',
+          time: 'string (optional: hour|day|week|month|year|all, default: day)',
+        },
+        output: { posts: 'RedditPost[] — title, author, score, num_comments, url, body_preview, upvote_ratio' },
+      }),
+      402,
+    );
+  }
+
+  const verified = await verifyPayment(payment.txHash, payment.network, REDDIT_PRICES.subredditTop, WALLET_ADDRESS);
+  if (!verified.valid) {
+    return c.json({ error: 'Payment verification failed', details: verified.error }, 402);
+  }
+
+  const clientIp = getClientIp(c);
+  if (!checkProxyRateLimit(clientIp)) {
+    return c.json({ error: 'Rate limit exceeded. Try again in 60 seconds.' }, 429);
+  }
+
+  try {
+    const name = c.req.param('name');
+    if (!name) return c.json({ error: 'Subreddit name is required' }, 400);
+
+    const time = (c.req.query('time') as any) || 'day';
+    const proxyIp = await getProxyExitIp();
+    const posts = await getSubredditTop(name, time);
+
+    return c.json({
+      subreddit: `r/${name}`,
+      posts,
+      meta: {
+        subreddit: name,
+        time,
+        total_results: posts.length,
+        proxy: { ip: proxyIp || 'mobile', country: 'US', carrier: 'T-Mobile' },
+      },
+      payment: { txHash: payment.txHash, amount: String(REDDIT_PRICES.subredditTop), verified: true },
+    });
+  } catch (err: any) {
+    return c.json({ error: 'Subreddit top failed', details: err.message }, 500);
+  }
+});
+
+// ─── GET /api/reddit/thread/:id/comments ────────────
+serviceRouter.get('/reddit/thread/:id/comments', async (c) => {
+  const payment = extractPayment(c);
+  if (!payment) {
+    return c.json(
+      build402Response('/api/reddit/thread/:id/comments', 'Full thread with nested comments', REDDIT_PRICES.thread, WALLET_ADDRESS, {
+        input: {
+          id: 'string (required) — Reddit thread ID (e.g., "1abcd2e")',
+          sort: 'string (optional: best|top|new|controversial|old, default: best)',
+        },
+        output: { post: 'RedditPost', comments: 'RedditComment[] — author, body, score, depth, is_op', total_comments: 'number' },
+      }),
+      402,
+    );
+  }
+
+  const verified = await verifyPayment(payment.txHash, payment.network, REDDIT_PRICES.thread, WALLET_ADDRESS);
+  if (!verified.valid) {
+    return c.json({ error: 'Payment verification failed', details: verified.error }, 402);
+  }
+
+  const clientIp = getClientIp(c);
+  if (!checkProxyRateLimit(clientIp)) {
+    return c.json({ error: 'Rate limit exceeded. Try again in 60 seconds.' }, 429);
+  }
+
+  try {
+    const id = c.req.param('id');
+    if (!id) return c.json({ error: 'Thread ID is required' }, 400);
+
+    const sort = (c.req.query('sort') as any) || 'best';
+    const proxyIp = await getProxyExitIp();
+    const thread = await getThread(id, sort);
+
+    return c.json({
+      ...thread,
+      meta: {
+        thread_id: id,
+        sort,
+        comments_returned: thread.comments.length,
+        proxy: { ip: proxyIp || 'mobile', country: 'US', carrier: 'T-Mobile' },
+      },
+      payment: { txHash: payment.txHash, amount: String(REDDIT_PRICES.thread), verified: true },
+    });
+  } catch (err: any) {
+    return c.json({ error: 'Thread fetch failed', details: err.message }, 500);
+  }
+});

@@ -1,0 +1,81 @@
+{
+  "name": "reddit-intelligence",
+  "title": "Reddit Intelligence API",
+  "description": "Search Reddit posts and comments by keyword/subreddit, track trending topics, extract engagement metrics, and monitor brand mentions \u2014 all routed through mobile proxies that bypass Reddit's datacenter IP blocks.",
+  "version": "1.0.0",
+  "author": "Mellowambience",
+  "pricing": {
+    "search": {
+      "price": 0.005,
+      "unit": "USDC",
+      "description": "Search posts by keyword"
+    },
+    "trending": {
+      "price": 0.005,
+      "unit": "USDC",
+      "description": "Get trending topics"
+    },
+    "subreddit_top": {
+      "price": 0.005,
+      "unit": "USDC",
+      "description": "Top posts from subreddit"
+    },
+    "thread_comments": {
+      "price": 0.01,
+      "unit": "USDC",
+      "description": "Full thread with comments"
+    }
+  },
+  "endpoints": [
+    {
+      "path": "/api/reddit/search",
+      "method": "GET",
+      "params": {
+        "query": "string (required)",
+        "subreddit": "string (optional, default: all)",
+        "sort": "relevance|hot|new|top|comments",
+        "time": "hour|day|week|month|year|all"
+      },
+      "price": "$0.005 USDC"
+    },
+    {
+      "path": "/api/reddit/trending",
+      "method": "GET",
+      "params": {
+        "country": "string (optional, default: US)"
+      },
+      "price": "$0.005 USDC"
+    },
+    {
+      "path": "/api/reddit/subreddit/:name/top",
+      "method": "GET",
+      "params": {
+        "name": "string (required)",
+        "time": "hour|day|week|month|year|all"
+      },
+      "price": "$0.005 USDC"
+    },
+    {
+      "path": "/api/reddit/thread/:id/comments",
+      "method": "GET",
+      "params": {
+        "id": "string (required)",
+        "sort": "best|top|new|controversial|old"
+      },
+      "price": "$0.01 USDC"
+    }
+  ],
+  "wallet": "A6M8icBwgDPwYhaWAjhJw267nbtkuivKH2q6sKPZgQEf",
+  "network": "solana",
+  "tags": [
+    "reddit",
+    "search",
+    "trending",
+    "social-intelligence",
+    "brand-monitoring",
+    "sentiment"
+  ],
+  "requirements": [
+    "Proxies.sx mobile proxy credentials"
+  ]
+}
