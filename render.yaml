@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: instagram-intelligence
+    runtime: docker
+    plan: free
+    envVars:
+      - key: WALLET_ADDRESS
+        value: A6M8icBwgDPwYhaWAjhJw267nbtkuivKH2q6sKPZgQEf
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: PROXY_HOST
+        sync: false
+      - key: PROXY_PORT
+        sync: false
+      - key: PROXY_USER
+        sync: false
+      - key: PROXY_PASS
+        sync: false
+    healthCheckPath: /health
