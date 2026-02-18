@@ -1296,4 +1296,183 @@ serviceRouter.get('/tiktok/sound/:id', async (c) => {
   } catch (err: any) {
     return c.json({ error: 'TikTok sound data failed', details: err.message }, 500);
   }
+});\n
+
+// ═══════════════════════════════════════════════════════
+// Facebook Marketplace Monitor API (Bounty #75) — $75
+// ═══════════════════════════════════════════════════════
+
+import { searchMarketplace, getListingDetails, getCategories as getFbCategories, getNewListings } from './scrapers/facebook-marketplace';
+
+const FB_PRICES = {
+  search: 0.01,
+  listing: 0.005,
+  categories: 0.005,
+  monitor: 0.02,
+};
+
+// ─── GET /api/marketplace/search ────────────────────
+serviceRouter.get('/marketplace/search', async (c) => {
+  const payment = extractPayment(c);
+  if (!payment) {
+    return c.json(
+      build402Response('/api/marketplace/search', 'Search Facebook Marketplace listings', FB_PRICES.search, WALLET_ADDRESS, {
+        input: {
+          query: 'string (required) — Search keyword',
+          location: 'string (optional) — City name',
+          min_price: 'number (optional) — Minimum price',
+          max_price: 'number (optional) — Maximum price',
+          radius: 'string (optional, e.g., "25mi")',
+          limit: 'number (optional, default: 20)',
+        },
+        output: { results: 'MarketplaceListing[] — id, title, price, seller, condition, images, url' },
+      }),
+      402,
+    );
+  }
+
+  const verified = await verifyPayment(payment.txHash, payment.network, FB_PRICES.search, WALLET_ADDRESS);
+  if (!verified.valid) return c.json({ error: 'Payment verification failed', details: verified.error }, 402);
+
+  const clientIp = getClientIp(c);
+  if (!checkProxyRateLimit(clientIp)) return c.json({ error: 'Rate limit exceeded.' }, 429);
+
+  try {
+    const query = c.req.query('query');
+    if (!query) return c.json({ error: 'query parameter is required' }, 400);
+
+    const location = c.req.query('location');
+    const minPrice = c.req.query('min_price') ? parseFloat(c.req.query('min_price')!) : undefined;
+    const maxPrice = c.req.query('max_price') ? parseFloat(c.req.query('max_price')!) : undefined;
+    const radius = c.req.query('radius');
+    const limit = Math.min(parseInt(c.req.query('limit') || '20'), 50);
+    const proxyIp = await getProxyExitIp();
+
+    const data = await searchMarketplace(query, location, minPrice, maxPrice, radius, limit);
+
+    return c.json({
+      ...data,
+      meta: {
+        query, location, min_price: minPrice, max_price: maxPrice, radius,
+        proxy: { ip: proxyIp || 'mobile', country: 'US', carrier: 'Verizon' },
+      },
+      payment: { txHash: payment.txHash, amount: String(FB_PRICES.search), verified: true },
+    });
+  } catch (err: any) {
+    return c.json({ error: 'FB Marketplace search failed', details: err.message }, 500);
+  }
+});
+
+// ─── GET /api/marketplace/listing/:id ───────────────
+serviceRouter.get('/marketplace/listing/:id', async (c) => {
+  const payment = extractPayment(c);
+  if (!payment) {
+    return c.json(
+      build402Response('/api/marketplace/listing/:id', 'Full details of a Marketplace listing', FB_PRICES.listing, WALLET_ADDRESS, {
+        input: { id: 'string (required) — Listing ID' },
+        output: { listing: 'MarketplaceListing — full details with images, seller, condition' },
+      }),
+      402,
+    );
+  }
+
+  const verified = await verifyPayment(payment.txHash, payment.network, FB_PRICES.listing, WALLET_ADDRESS);
+  if (!verified.valid) return c.json({ error: 'Payment verification failed', details: verified.error }, 402);
+
+  const clientIp = getClientIp(c);
+  if (!checkProxyRateLimit(clientIp)) return c.json({ error: 'Rate limit exceeded.' }, 429);
+
+  try {
+    const listingId = c.req.param('id');
+    if (!listingId) return c.json({ error: 'listing id is required' }, 400);
+
+    const proxyIp = await getProxyExitIp();
+    const listing = await getListingDetails(listingId);
+
+    return c.json({
+      listing,
+      meta: { proxy: { ip: proxyIp || 'mobile', country: 'US', carrier: 'Verizon' } },
+      payment: { txHash: payment.txHash, amount: String(FB_PRICES.listing), verified: true },
+    });
+  } catch (err: any) {
+    return c.json({ error: 'FB Marketplace listing failed', details: err.message }, 500);
+  }
+});
+
+// ─── GET /api/marketplace/categories ────────────────
+serviceRouter.get('/marketplace/categories', async (c) => {
+  const payment = extractPayment(c);
+  if (!payment) {
+    return c.json(
+      build402Response('/api/marketplace/categories', 'Marketplace categories for a location', FB_PRICES.categories, WALLET_ADDRESS, {
+        input: { location: 'string (optional) — City name' },
+        output: { categories: 'MarketplaceCategory[] — id, name, url' },
+      }),
+      402,
+    );
+  }
+
+  const verified = await verifyPayment(payment.txHash, payment.network, FB_PRICES.categories, WALLET_ADDRESS);
+  if (!verified.valid) return c.json({ error: 'Payment verification failed', details: verified.error }, 402);
+
+  try {
+    const location = c.req.query('location');
+    const proxyIp = await getProxyExitIp();
+    const categories = await getFbCategories(location);
+
+    return c.json({
+      categories,
+      meta: { location, total: categories.length, proxy: { ip: proxyIp || 'mobile', country: 'US', carrier: 'Verizon' } },
+      payment: { txHash: payment.txHash, amount: String(FB_PRICES.categories), verified: true },
+    });
+  } catch (err: any) {
+    return c.json({ error: 'FB Marketplace categories failed', details: err.message }, 500);
+  }
+});
+
+// ─── GET /api/marketplace/new ───────────────────────
+serviceRouter.get('/marketplace/new', async (c) => {
+  const payment = extractPayment(c);
+  if (!payment) {
+    return c.json(
+      build402Response('/api/marketplace/new', 'Monitor new Marketplace listings', FB_PRICES.monitor, WALLET_ADDRESS, {
+        input: {
+          query: 'string (required) — Search keyword',
+          since: 'string (optional, e.g., "1h", "6h", "24h", default: "1h")',
+          limit: 'number (optional, default: 20)',
+        },
+        output: { results: 'MarketplaceListing[] — new listings since timeframe', since: 'ISO timestamp' },
+      }),
+      402,
+    );
+  }
+
+  const verified = await verifyPayment(payment.txHash, payment.network, FB_PRICES.monitor, WALLET_ADDRESS);
+  if (!verified.valid) return c.json({ error: 'Payment verification failed', details: verified.error }, 402);
+
+  const clientIp = getClientIp(c);
+  if (!checkProxyRateLimit(clientIp)) return c.json({ error: 'Rate limit exceeded.' }, 429);
+
+  try {
+    const query = c.req.query('query');
+    if (!query) return c.json({ error: 'query parameter is required' }, 400);
+
+    const sinceStr = c.req.query('since') || '1h';
+    const sinceHours = parseFloat(sinceStr.replace('h', ''));
+    const limit = Math.min(parseInt(c.req.query('limit') || '20'), 50);
+    const proxyIp = await getProxyExitIp();
+
+    const data = await getNewListings(query, sinceHours, limit);
+
+    return c.json({
+      ...data,
+      meta: {
+        query, since_hours: sinceHours,
+        proxy: { ip: proxyIp || 'mobile', country: 'US', carrier: 'Verizon' },
+      },
+      payment: { txHash: payment.txHash, amount: String(FB_PRICES.monitor), verified: true },
+    });
+  } catch (err: any) {
+    return c.json({ error: 'FB Marketplace monitor failed', details: err.message }, 500);
+  }
 });

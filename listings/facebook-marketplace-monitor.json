@@ -1,0 +1,60 @@
+{
+  "name": "facebook-marketplace-monitor",
+  "title": "Facebook Marketplace Monitor API",
+  "description": "Search and monitor Facebook Marketplace listings by keyword, location, price range. Extract listing details, seller info, photos. Track new listings in real-time. No official API exists \u2014 this fills the gap at micropayment prices.",
+  "version": "1.0.0",
+  "author": "Mellowambience",
+  "pricing": {
+    "search": {
+      "price": 0.01,
+      "unit": "USDC",
+      "description": "Search listings"
+    },
+    "listing_detail": {
+      "price": 0.005,
+      "unit": "USDC",
+      "description": "Full listing details"
+    },
+    "categories": {
+      "price": 0.005,
+      "unit": "USDC",
+      "description": "Browse categories"
+    },
+    "monitor": {
+      "price": 0.02,
+      "unit": "USDC",
+      "description": "New listings monitor"
+    }
+  },
+  "endpoints": [
+    {
+      "path": "/api/marketplace/search",
+      "method": "GET",
+      "price": "$0.01 USDC"
+    },
+    {
+      "path": "/api/marketplace/listing/:id",
+      "method": "GET",
+      "price": "$0.005 USDC"
+    },
+    {
+      "path": "/api/marketplace/categories",
+      "method": "GET",
+      "price": "$0.005 USDC"
+    },
+    {
+      "path": "/api/marketplace/new",
+      "method": "GET",
+      "price": "$0.02 USDC"
+    }
+  ],
+  "wallet": "A6M8icBwgDPwYhaWAjhJw267nbtkuivKH2q6sKPZgQEf",
+  "network": "solana",
+  "tags": [
+    "facebook",
+    "marketplace",
+    "e-commerce",
+    "listings",
+    "monitor"
+  ]
+}
