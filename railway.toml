@@ -1,0 +1,22 @@
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+numReplicas = 1
+sleepApplication = false
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
+healthcheckPath = "/health"
+
+[service]
+name = "trend-intelligence"
+
+[variables]
+WALLET_ADDRESS = "A6M8icBwgDPwYhaWAjhJw267nbtkuivKH2q6sKPZgQEf"
+PROXY_HOST = "gate.proxies.sx"
+PROXY_PORT = "4001"
+PROXY_USER = ""   # set in Railway dashboard after Proxies.sx port is created
+PROXY_PASS = ""   # set in Railway dashboard after Proxies.sx port is created
+NODE_ENV = "production"
+PORT = "3000"
